@@ -7,7 +7,7 @@
     },
     "description": "HomeBridge HTTP Status Control",
     "plugins": [
-        "lg-air-purifier",
+        "homebridge-lg-air-purifier",
         "homebridge-config-ui-x"
     ],
     "platforms": [
@@ -23,7 +23,10 @@
             "debug": false
         },
         {
-            "name": "lg-air-purifier",
+            "name": "homebridge-lg-air-purifier",
+            "country": "VN",
+            "region": "kic",
+            "token": "thinqpat_token",
             "platform": "LGAirPurifier"
         }
     ],

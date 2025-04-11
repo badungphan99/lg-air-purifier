@@ -11,6 +11,30 @@
         "type": "string",
         "required": true,
         "default": "Example Dynamic Platform"
+      },
+      "country": {
+        "title": "Country Code",
+        "type": "string",
+        "required": true,
+        "default": "VN"
+      },
+      "region": {
+        "title": "Region",
+        "type": "string",
+        "required": true,
+        "default": "kic",
+        "oneOf": [
+          { "title": "Aisa", "enum": ["kic"] },
+          { "title": "Europe", "enum": ["eic"] },
+          { "title": "North/South America", "enum": ["aic"] }
+        ]
+      },
+      "token": {
+        "title": "PAT token",
+        "description": "The PAT token. You can get it from https://connect-pat.lgthinq.com.",
+        "type": "string",
+        "required": true,
+        "default": ""
       }
     }
   }

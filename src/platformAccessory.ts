@@ -1,6 +1,8 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 
-import type { ExampleHomebridgePlatform } from './platform.js';
+import type { LGAirPurifierPlatform } from './platform.js';
+
+import { ThingQ } from './lib/thinq.js';
 
 /**
  * Platform Accessory
@@ -20,7 +22,7 @@ export class ExamplePlatformAccessory {
   };
 
   constructor(
-    private readonly platform: ExampleHomebridgePlatform,
+    private readonly platform: LGAirPurifierPlatform,
     private readonly accessory: PlatformAccessory,
   ) {
     // set accessory information
@@ -71,8 +73,8 @@ export class ExamplePlatformAccessory {
     const motionSensorOneService = this.accessory.getService('Motion Sensor One Name')
       || this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
 
-    const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
+    // const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name')
+    //   || this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
 
     /**
      * Updating characteristics values asynchronously.
@@ -90,10 +92,10 @@ export class ExamplePlatformAccessory {
 
       // push the new value to HomeKit
       motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
-      motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
+      // motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
 
       this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
-      this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
+      // this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
     }, 10000);
   }
 

@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'LGAirPurifier';
 /**
  * This must match the name of your plugin as defined the package.json `name` property
  */
-export const PLUGIN_NAME = 'lg-air-purifier';
+export const PLUGIN_NAME = 'homebridge-lg-air-purifier';
