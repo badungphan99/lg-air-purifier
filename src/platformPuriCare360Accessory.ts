@@ -29,7 +29,7 @@ export class Puricare360Accessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'LG')
       .setCharacteristic(this.platform.Characteristic.Model, this.accessory.context.device.deviceInfo.modelName)
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.accessory.context.device.deviceId);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.accessory.context.device.deviceId.slice(-16));
 
     this.airPurifierService = this.accessory.getService(this.platform.Service.AirPurifier) || this.accessory.addService(this.platform.Service.AirPurifier);
     this.airPurifierService.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.deviceInfo.alias);
@@ -45,7 +45,6 @@ export class Puricare360Accessory {
 
     setInterval(() => {
       this.getDeviceState();
-      this.platform.log.debug('Device data: ' + JSON.stringify(this.accessory.context.device.data));
 
       this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active,
         this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON'
@@ -70,25 +69,22 @@ export class Puricare360Accessory {
   }
 
   async getOn(): Promise<CharacteristicValue> {
-    // const state = Object(await this.platform.thingQ.getDeviceState(this.accessory.context.device.deviceId)).operation.airPurifierOperationMode;
-    // this.platform.log.debug('getOn: ' + state);
-    // if (state === 'POWER_ON') {
-    //   return this.platform.Characteristic.Active.ACTIVE;
-    // }
     return this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON'
       ? this.platform.Characteristic.Active.ACTIVE
       : this.platform.Characteristic.Active.INACTIVE;
   }
 
   async setOn(value: CharacteristicValue) {
-    // this.platform.thingQ.setDeviceState(this.accessory.context.device.deviceId, value);
-    // this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active, value);
-    this.platform.log.info('Set Active to ' + value);
+    if (value === this.platform.Characteristic.Active.ACTIVE) {
+      this.platform.thingQ.setDeviceState(this.accessory.context.device.deviceId, 'POWER_ON');
+    } else {
+      this.platform.thingQ.setDeviceState(this.accessory.context.device.deviceId, 'POWER_OFF');
+    };
+    this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active, value);
   }
 
   async changeRotationSpeed(value: CharacteristicValue) {
-    // this.platform.thingQ.setDeviceRotationSpeed(this.accessory.context.device.deviceId, value);
-    // this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed, value);
-    this.platform.log.info('Set RotationSpeed to ' + value);
+    this.platform.thingQ.setDeviceRotationSpeed(this.accessory.context.device.deviceId, FanSpeed[value as number]);
+    this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed, value);
   }
 }
