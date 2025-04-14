@@ -38,8 +38,18 @@ export class ThingQ {
     return response.data.response;
   }
 
-  async setDeviceState(deviceId: string, state: CharacteristicValue): Promise<boolean> {
+  async setDeviceState(deviceId: string, state: string): Promise<boolean> {
+    const data = {
+      'operation': {
+        'airPurifierOperationMode': `${state}`,
+      },
+    };
+    const response: AxiosResponse = await this.client.post(`/devices/${deviceId}/control`, data, this.defaultHeaders);
     this.log.debug('setDeviceState', deviceId, state);
+    if (response.status !== 200) {
+      this.log.error('Error fetching devices:', response.status, response.statusText);
+      return false;
+    }
     return true;
   }
 
