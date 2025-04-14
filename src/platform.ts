@@ -1,6 +1,5 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
-import { ExamplePlatformAccessory } from './platformAccessory.js';
 import { Puricare360Accessory } from './platformPuriCare360Accessory.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { ThingQ } from './lib/thinq.js';

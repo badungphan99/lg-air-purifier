@@ -2,8 +2,6 @@ import { Characteristic, type CharacteristicValue, type PlatformAccessory, type 
 
 import type { LGAirPurifierPlatform } from './platform.js';
 
-import { ThingQ } from './lib/thinq.js';
-
 export class Puricare360Accessory {
   // private service: Service;
   private airPurifierService: Service;
