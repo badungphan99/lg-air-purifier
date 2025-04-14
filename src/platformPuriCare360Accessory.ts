@@ -1,11 +1,9 @@
-import { Characteristic, type CharacteristicValue, type PlatformAccessory, type Service } from 'homebridge';
-
+import { type CharacteristicValue, type PlatformAccessory, type Service } from 'homebridge';
 import type { LGAirPurifierPlatform } from './platform.js';
-
 export class Puricare360Accessory {
   // private service: Service;
   private airPurifierService: Service;
-  private airQualitySensorService: Service;
+  // private airQualitySensorService: Service;
   constructor(
     private readonly platform: LGAirPurifierPlatform,
     private readonly accessory: PlatformAccessory,
@@ -25,15 +23,13 @@ export class Puricare360Accessory {
     this.airPurifierService.getCharacteristic(this.platform.Characteristic.RotationSpeed)
       .onSet(this.changeRotationSpeed.bind(this));
     
-    this.airPurifierService.getCharacteristic(this.platform.Characteristic.CurrentAirPurifierState)
-      .onSet(this.changeAirPurifierState.bind(this));
+    // this.airPurifierService.getCharacteristic(this.platform.Characteristic.CurrentAirPurifierState)
+    //   .onSet(this.changeAirPurifierState.bind(this));
 
-    this.airPurifierService.getCharacteristic(this.platform.Characteristic.FilterLifeLevel);
-
-    this.airQualitySensorService = this.accessory.getService(this.platform.Service.AirQualitySensor) || 
-      this.accessory.addService(this.platform.Service.AirQualitySensor);
+    // this.airQualitySensorService = this.accessory.getService(this.platform.Service.AirQualitySensor) || 
+    //   this.accessory.addService(this.platform.Service.AirQualitySensor);
     
-    this.airQualitySensorService.getCharacteristic(this.platform.Characteristic.AirQuality).onGet(this.getAirQuality.bind(this));
+    // this.airQualitySensorService.getCharacteristic(this.platform.Characteristic.AirQuality).onGet(this.getAirQuality.bind(this));
   }
 
   async getOn(): Promise<CharacteristicValue> {
@@ -47,21 +43,20 @@ export class Puricare360Accessory {
 
   async setOn(value: CharacteristicValue) {
     this.platform.thingQ.setDeviceState(this.accessory.context.device.deviceId, value);
-    // this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active, value);
-    // this.platform.log.info('Set Active to ' + value);
+    this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active, value);
   }
 
   async changeRotationSpeed(value: CharacteristicValue) {
+    this.platform.thingQ.setDeviceRotationSpeed(this.accessory.context.device.deviceId, value);
     this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed, value);
-    this.platform.log.info('Set RotationSpeed to ' + value);
   }
 
-  async changeAirPurifierState(value: CharacteristicValue) {
-    this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState, value);
-    this.platform.log.info('Set CurrentAirPurifierState to ' + value);
-  }
+  // async changeAirPurifierState(value: CharacteristicValue) {
+  //   this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState, value);
+  //   this.platform.log.info('Set CurrentAirPurifierState to ' + value);
+  // }
 
-  async getAirQuality(): Promise<CharacteristicValue> {
-    return this.platform.Characteristic.AirQuality.GOOD;
-  }
+  // async getAirQuality(): Promise<CharacteristicValue> {
+  //   return this.platform.Characteristic.AirQuality.GOOD;
+  // }
 }

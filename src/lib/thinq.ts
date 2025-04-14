@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, RawAxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
 import type { Logging, CharacteristicValue } from 'homebridge';
 
-import * as constants from './constants.js'
+import * as constants from './constants.js';
 
 export class ThingQ {
   private pat: string;
@@ -39,27 +39,13 @@ export class ThingQ {
   }
 
   async setDeviceState(deviceId: string, state: CharacteristicValue): Promise<boolean> {
-    const headers: RawAxiosRequestHeaders = {
-      'Authorization' : `Bearer ${this.pat}`,
-      'x-message-id': 'fNvdZ1brTn-wWKUlWGoSVw',
-      'x-country': this.country_code,
-      'x-client-id': 'LG-THINQ',
-      'x-api-key': 'v6GFvkweNo7DK7yD3ylIZ9w52aKBU0eJ7wLXkSR3',
-      'x-conditional-control': 'true',
-    };
-    let state_string = 'POWER_OFF';
-    if (state === 1) {
-      state_string = 'POWER_ON';
-    }
-    const data = { 'operation': { 'airPurifierOperationMode': `${state_string}` } };
-    const response: AxiosResponse = await this.client.post(`/devices/${deviceId}/control`, data, {
-      headers,
-    });
-    if (response.status === 200) {
-      return true;
-    }
-    this.log.error('Error setting device state:', response.status, response.statusText);
-    return false;
+    this.log.debug('setDeviceState', deviceId, state);
+    return true;
+  }
+
+  async setDeviceRotationSpeed(deviceId: string, speed: CharacteristicValue): Promise<boolean> {
+    this.log.debug('setDeviceRotationSpeed', deviceId, speed);
+    return true;
   }
 
   protected get defaultHeaders(): RawAxiosRequestConfig {
@@ -80,8 +66,8 @@ export class ThingQ {
       'x-country': this.country_code,
       'x-client-id': constants.X_CLIENT_ID,
       'x-api-key': constants.X_API_KEY,
-    }
+    };
 
-    return {headers} as AxiosRequestConfig
+    return { headers } as AxiosRequestConfig;
   }
 }
