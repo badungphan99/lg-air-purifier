@@ -20,42 +20,61 @@ export class ThingQ {
     });
   }
 
-  public async getDevices(): Promise<JSON> {
-    const response: AxiosResponse = await this.client.get('/devices', this.defaultHeaders);
-    if (response.status !== 200) {
-      this.log.error('Error fetching devices:', response.status, response.statusText);
-      return JSON.parse('{"error": "Error fetching devices"}');
-    }
-    return response.data.response;
+  public async getDevices(): Promise<object> {
+    return this.makeGetRequest('/devices', 'fetching devices');
   }
 
-  public async getDeviceState(deviceId: string): Promise<JSON> {
-    const response: AxiosResponse = await this.client.get(`/devices/${deviceId}/state`, this.defaultHeaders);
-    if (response.status !== 200) {
-      this.log.error('Error fetching devices:', response.status, response.statusText);
-      return JSON.parse('{"error": "Error fetching devices"}');
-    }
-    return response.data.response;
+  public async getDeviceState(deviceId: string): Promise<object> {
+    return this.makeGetRequest(`/devices/${deviceId}/state`, 'fetching device state');
   }
 
-  async setDeviceState(deviceId: string, state: string): Promise<boolean> {
+  public async setDeviceState(deviceId: string, state: string): Promise<boolean> {
     const data = {
-      'operation': {
-        'airPurifierOperationMode': `${state}`,
+      operation: {
+        airPurifierOperationMode: state,
       },
     };
-    const response: AxiosResponse = await this.client.post(`/devices/${deviceId}/control`, data, this.defaultHeaders);
-    this.log.debug('setDeviceState', deviceId, state);
-    if (response.status !== 200) {
-      this.log.error('Error fetching devices:', response.status, response.statusText);
-      return false;
-    }
-    return true;
+    return this.makePostRequest(`/devices/${deviceId}/control`, data, 'setting device state');
   }
 
   async setDeviceRotationSpeed(deviceId: string, speed: CharacteristicValue): Promise<boolean> {
-    this.log.debug('setDeviceRotationSpeed', deviceId, speed);
-    return true;
+    const data = {
+      airFlow: {
+        windStrength: speed,
+      },
+    };
+    return this.makePostRequest(`/devices/${deviceId}/control`, data, 'setting device rotation speed');
+  }
+
+  public async setDeviceSleepMode(deviceId: string, mode: CharacteristicValue): Promise<boolean> {
+    this.log.debug('setDeviceSleepMode', mode);
+    const data = {
+      'airPurifierJobMode': {
+        'currentJobMode': `${mode ? 'SLEEP' : 'CLEAN'}`,
+      },
+    };
+    return this.makePostRequest(`/devices/${deviceId}/control`, data, 'setting sleep mode');
+  }
+
+  private async makeGetRequest(endpoint: string, context: string): Promise<object> {
+    try {
+      const response: AxiosResponse = await this.client.get(endpoint, this.defaultHeaders);
+      return response.data.response;
+    } catch (error: unknown) {
+      this.log.error(`Error ${context}:`, error);
+      return { error: `Error ${context}` };
+    }
+  }
+
+  private async makePostRequest(endpoint: string, data: object, context: string): Promise<boolean> {
+    try {
+      const response: AxiosResponse = await this.client.post(endpoint, data, this.defaultHeaders);
+      this.log.debug(`${context} success:`, data);
+      return response.status === 200;
+    } catch (error: unknown) {
+      this.log.error(`Error ${context}:`, error);
+      return false;
+    }
   }
 
   protected get defaultHeaders(): RawAxiosRequestConfig {

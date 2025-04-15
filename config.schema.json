@@ -35,6 +35,13 @@
         "type": "string",
         "required": true,
         "default": ""
+      },
+      "interval": {
+        "title": "Interval",
+        "description": "Interval in seconds to check the status of the device.",
+        "type": "number",
+        "required": false,
+        "default": 30
       }
     }
   }
