@@ -11,8 +11,11 @@
 ## ✨ Features
 
 - Automatically discovers air purifier devices from your LG ThinQ account
-- Syncs with Apple HomeKit for smart control
-- Basic control and status monitoring (on/off, mode, sleep, etc.)
+- Seamlessly syncs with Apple HomeKit for smart control
+- Basic control and status monitoring, including:
+  - Power: On/Off
+  - Wind Strength Control: `auto`, `slow`, `mid`, `high`, `turbo`
+  - Sleep Mode: Enable/Disable
 
 ---
 
