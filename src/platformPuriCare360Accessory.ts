@@ -108,6 +108,10 @@ export class Puricare360Accessory {
       return;
     }
     this.accessory.context.device.data = await this.platform.thingQ.getDeviceState(this.accessory.context.device.deviceId);
+    if (this.accessory.context.device.data.error) {
+      this.platform.log.error('Error fetching device state:', this.accessory.context.device.data.error);
+      return;
+    }
   }
 
   async getOn(): Promise<CharacteristicValue> {

@@ -10,7 +10,7 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "LG Air Purifier"
       },
       "country": {
         "title": "Country Code",

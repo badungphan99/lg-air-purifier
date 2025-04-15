@@ -61,8 +61,17 @@ export class ThingQ {
       const response: AxiosResponse = await this.client.get(endpoint, this.defaultHeaders);
       return response.data.response;
     } catch (error: unknown) {
-      this.log.error(`Error ${context}:`, error);
-      return { error: `Error ${context}` };
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          this.log.error(`Unauthorized (401) error during ${context}: Your token may be invalid, expired or over rate limit.`);
+          return { error: 401, message: 'Unauthorized' };
+        } else {
+          this.log.error(`Error during ${context}:`, error);
+          return { error: `Failed to complete ${context}` };
+        }
+      } else {
+        return { error: `Failed to complete ${context}` };
+      }
     }
   }
 
@@ -78,13 +87,11 @@ export class ThingQ {
   }
 
   protected get defaultHeaders(): RawAxiosRequestConfig {
-    
     function random_string(l: number) {
       const result: string[] = [];
       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      const charactersLength = characters.length;
       for (let i = 0; i < l; i++) {
-        result.push(characters.charAt(Math.floor(Math.random() * charactersLength)));
+        result.push(characters.charAt(Math.floor(Math.random() * constants.LENGTH_MSG_ID)));
       }
       return result.join('');
     }
