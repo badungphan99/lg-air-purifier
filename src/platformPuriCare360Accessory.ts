@@ -30,7 +30,7 @@ export class Puricare360Accessory {
   ) {
 
     this.interval = this.platform.config.interval * 1000 || 30000;
-    this.lastUpdate = Date.now();
+    this.lastUpdate = 0;
 
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'LG')
@@ -53,7 +53,9 @@ export class Puricare360Accessory {
       });
 
     this.airPurifierService.getCharacteristic(this.platform.Characteristic.RotationSpeed)
-      .onSet(this.changeRotationSpeed.bind(this)).setProps({ minValue: 0, maxValue: 100, minStep: 20 });
+      .onGet(this.onGetRotationSpeed.bind(this))
+      .onSet(this.changeRotationSpeed.bind(this))
+      .setProps({ minValue: 0, maxValue: 100, minStep: 20 });
     
     // Register air quality sensor service
     this.airQualitySensorService = this.accessory.getService(this.platform.Service.AirQualitySensor) ||
@@ -71,51 +73,50 @@ export class Puricare360Accessory {
 
     setInterval(async () => {
       await this.getDeviceState();
-
-      if (this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON') {
-        this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState,
-          this.platform.Characteristic.CurrentAirPurifierState.PURIFYING_AIR);
-        this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active,
-          this.platform.Characteristic.Active.ACTIVE);
-      } else {
-        this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState,
-          this.platform.Characteristic.CurrentAirPurifierState.INACTIVE);
-        this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active,
-          this.platform.Characteristic.Active.INACTIVE);
-      }
-      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed,
-        FanSpeed[this.accessory.context.device.data.airFlow.windStrength]);
-      
-      this.airQualitySensorService.updateCharacteristic(this.platform.Characteristic.AirQuality,
-        AirQualityStatus[this.accessory.context.device.data.airQualitySensor.totalPollutionLevel]);
-      this.airQualitySensorService.updateCharacteristic(this.platform.Characteristic.PM2_5Density,
-        this.accessory.context.device.data.airQualitySensor.PM2);
-      this.airQualitySensorService.updateCharacteristic(this.platform.Characteristic.PM10Density,
-        this.accessory.context.device.data.airQualitySensor.PM10);
-
-      this.sleepModeService.updateCharacteristic(this.platform.Characteristic.On,
-        this.accessory.context.device.data.airPurifierJobMode.currentJobMode === 'SLEEP');
-    }, this.interval);
+    }, this.interval / 5);
   }
 
 
   private async getDeviceState() {
-    this.platform.log.debug('Fetching device state');
-    this.platform.log.debug('Last update:', this.lastUpdate);
-    this.platform.log.debug('Curent sate: ', this.accessory.context.device.data);
-    if (this.lastUpdate && (Date.now() - this.lastUpdate) < this.interval) {
-      this.platform.log.debug('Device state update skipped to avoid rate limit');
+    try {
+      if (this.lastUpdate && (Date.now() - this.lastUpdate) < this.interval) {
+        return;
+      }
+      this.accessory.context.device.data = await this.platform.thingQ.getDeviceState(this.accessory.context.device.deviceId);
+      this.lastUpdate = Date.now();
+    } catch (error) {
+      this.platform.log.error('Error fetching device state:', error);
       return;
     }
-    this.accessory.context.device.data = await this.platform.thingQ.getDeviceState(this.accessory.context.device.deviceId);
-    if (this.accessory.context.device.data.error) {
-      this.platform.log.error('Error fetching device state:', this.accessory.context.device.data.error);
-      return;
+    this.platform.log.debug('Device state fetched:', this.accessory.context.device.data);
+
+    // Update Characteristics
+    if (this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON') {
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState,
+        this.platform.Characteristic.CurrentAirPurifierState.PURIFYING_AIR);
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active,
+        this.platform.Characteristic.Active.ACTIVE);
+    } else {
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState,
+        this.platform.Characteristic.CurrentAirPurifierState.INACTIVE);
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active,
+        this.platform.Characteristic.Active.INACTIVE);
     }
+    this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed,
+      FanSpeed[this.accessory.context.device.data.airFlow.windStrength]);
+    
+    this.airQualitySensorService.updateCharacteristic(this.platform.Characteristic.AirQuality,
+      AirQualityStatus[this.accessory.context.device.data.airQualitySensor.totalPollutionLevel]);
+    this.airQualitySensorService.updateCharacteristic(this.platform.Characteristic.PM2_5Density,
+      this.accessory.context.device.data.airQualitySensor.PM2);
+    this.airQualitySensorService.updateCharacteristic(this.platform.Characteristic.PM10Density,
+      this.accessory.context.device.data.airQualitySensor.PM10);
+
+    this.sleepModeService.updateCharacteristic(this.platform.Characteristic.On,
+      this.accessory.context.device.data.airPurifierJobMode.currentJobMode === 'SLEEP');
   }
 
   async getOn(): Promise<CharacteristicValue> {
-    await this.getDeviceState();
     return this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON'
       ? this.platform.Characteristic.Active.ACTIVE
       : this.platform.Characteristic.Active.INACTIVE;
@@ -123,58 +124,54 @@ export class Puricare360Accessory {
 
   async setOn(value: CharacteristicValue) {
     const isTurningOn = value === this.platform.Characteristic.Active.ACTIVE;
-    this.platform.log.debug('Set Active to:', value);
-  
     const command = isTurningOn ? 'POWER_ON' : 'POWER_OFF';
-  
-    try {
-      await this.platform.thingQ.setDeviceState(this.accessory.context.device.deviceId, command);
-      await this.getDeviceState();
-  
-      const isNowOn = this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON';
-  
-      this.airPurifierService.updateCharacteristic(
-        this.platform.Characteristic.CurrentAirPurifierState,
-        isNowOn
+
+    await this.platform.thingQ.setDeviceState(this.accessory.context.device.deviceId, command).then(() => {
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.Active, value);
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.CurrentAirPurifierState,
+        isTurningOn
           ? this.platform.Characteristic.CurrentAirPurifierState.PURIFYING_AIR
-          : this.platform.Characteristic.CurrentAirPurifierState.INACTIVE,
-      );
-  
-      this.airPurifierService.updateCharacteristic(
-        this.platform.Characteristic.Active,
-        isNowOn
-          ? this.platform.Characteristic.Active.ACTIVE
-          : this.platform.Characteristic.Active.INACTIVE,
-      );
-    } catch (error) {
+          : this.platform.Characteristic.CurrentAirPurifierState.INACTIVE);
+    }).catch((error) => {
       this.platform.log.error('Failed to set device power state:', error);
-    }
+      throw error;
+    });
   }
 
-  async onGetCurrentAirPurifierState() {
-    await this.getDeviceState();
+  async onGetCurrentAirPurifierState(): Promise<CharacteristicValue> {
     return this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON'
       ? this.platform.Characteristic.CurrentAirPurifierState.PURIFYING_AIR
       : this.platform.Characteristic.CurrentAirPurifierState.INACTIVE;
   }
 
+  async onGetRotationSpeed(): Promise<CharacteristicValue> {
+    return FanSpeed[this.accessory.context.device.data.airFlow.windStrength];
+  }
+
   async changeRotationSpeed(value: CharacteristicValue) {
-    await this.platform.thingQ.setDeviceRotationSpeed(this.accessory.context.device.deviceId, FanSpeed[value as number]);
-    this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed, value);
+    if (value === 0) {
+      this.setOn(this.platform.Characteristic.Active.INACTIVE);
+      return;
+    }
+    await this.platform.thingQ.setDeviceRotationSpeed(this.accessory.context.device.deviceId, FanSpeed[value as number]).then(() => {
+      this.airPurifierService.updateCharacteristic(this.platform.Characteristic.RotationSpeed, value);
+    }).catch((error) => {
+      this.platform.log.error('Failed to set rotation speed:', error);
+      throw error;
+    });
   }
 
   async onGetSleepMode(): Promise<CharacteristicValue> {
-    await this.getDeviceState();
     return this.accessory.context.device.data.airPurifierJobMode.currentJobMode === 'SLEEP'
       ? true : false;
   }
 
   async onSetSleepMode(value: CharacteristicValue) {
-    try {
-      await this.platform.thingQ.setDeviceSleepMode(this.accessory.context.device.deviceId, value);
+    await this.platform.thingQ.setDeviceSleepMode(this.accessory.context.device.deviceId, value).then(() => {
       this.sleepModeService.updateCharacteristic(this.platform.Characteristic.On, value);
-    } catch (error) {
+    }).catch((error) => {
       this.platform.log.error('Failed to set sleep mode:', error);
-    }
+      throw error;
+    });
   }
 }

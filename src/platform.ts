@@ -79,11 +79,14 @@ export class LGAirPurifierPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
-    const devices = await this.thingQ.getDevices();
-    if ('error' in devices) {
-      this.log.error('error fetching devices:', devices.error);
+    let devices : object;
+    try {
+      devices = await this.thingQ.getDevices();
+    } catch (error) {
+      this.log.error('Error fetching devices:\n', error);
       return;
     }
+
     for (const device of Object.values(devices)) {
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial

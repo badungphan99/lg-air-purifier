@@ -62,27 +62,25 @@ export class ThingQ {
       return response.data.response;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          this.log.error(`Unauthorized (401) error during ${context}: Your token may be invalid, expired or over rate limit.`);
-          return { error: 401, message: 'Unauthorized' };
-        } else {
-          this.log.error(`Error during ${context}:`, error);
-          return { error: `Failed to complete ${context}` };
-        }
+        throw new Error(`Error during ${context}:\n Status Code ${error.response?.status}\n ${JSON.stringify(error.response?.data)}}`);
       } else {
-        return { error: `Failed to complete ${context}` };
+        throw new Error(`Error during ${context}:\n ${error}`);
       }
     }
   }
 
   private async makePostRequest(endpoint: string, data: object, context: string): Promise<boolean> {
+    this.log.debug(`${context} data:`, data);
     try {
       const response: AxiosResponse = await this.client.post(endpoint, data, this.defaultHeaders);
       this.log.debug(`${context} success:`, data);
       return response.status === 200;
     } catch (error: unknown) {
-      this.log.error(`Error ${context}:`, error);
-      return false;
+      if (axios.isAxiosError(error)) {
+        throw new Error(`Error during ${context}:\n Status Code ${error.response?.status}\n ${JSON.stringify(error.response?.data)}}`);
+      } else {
+        throw new Error(`Error during ${context}:\n ${error}`);
+      }
     }
   }
 

@@ -47,7 +47,7 @@ Add the following block to the `"platforms"` section of your Homebridge `config.
     "country": "VN",
     "region": "kic",
     "token": "your_thinq_pat_token",
-    "interval": 30
+    "interval": 10
   }
 ]
 ```
@@ -63,10 +63,10 @@ Add the following block to the `"platforms"` section of your Homebridge `config.
 | `country`  | Your [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code (e.g. `"US"`, `"VN"`, `"KR"`) |
 | `region`   | LG server region for your account:<br>• `"kic"` – Asia<br>• `"eic"` – Europe<br>• `"aic"` – North/South America |
 | `token`    | Your **LG ThinQ Personal Access Token (PAT)**. <br>👉 Get it here: [https://connect-pat.lgthinq.com](https://connect-pat.lgthinq.com) |
-| `interval` | *(optional)* Polling interval in seconds (default: `30`) |
+| `interval` | *(optional)* Polling interval in seconds (default: `10`) |
 
 > ⚠️ **Note on Rate Limits:**  
-> The LG ThinQ API has request limits. Setting a low interval (e.g. less than 20 seconds) may result in throttling or request failures. A 30–60 second interval is recommended for stability.
+> The LG ThinQ API has request limits. Setting a low interval (e.g. less than 10 seconds) may result in throttling or request failures. A 10–60 second interval is recommended for stability.
 
 ---
 
