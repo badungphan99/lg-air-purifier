@@ -24,9 +24,11 @@ export class Puricare360Accessory {
   private lastUpdate: EpochTimeStamp;
   exampleState = {
     active: 1,
-    curentState: 3,
-    targetState: 2,
+    curentState: 1,
+    targetState: 1,
     currentTemperature: 30,
+    targetCoolingTemperature: 30,
+    targetHeatingTemperature: 24,
   };
   constructor(
     private readonly platform: LGAirPurifierPlatform,
@@ -61,28 +63,54 @@ export class Puricare360Accessory {
         return this.exampleState.curentState;
       });
 
-    this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState).setProps({
-      validValues: [2],
+      // this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState).setProps({
+      //   validValues: [this.platform.Characteristic.TargetHeaterCoolerState.HEAT, 
+      //     this.platform.Characteristic.TargetHeaterCoolerState.COOL,
+      //     this.platform.Characteristic.TargetHeaterCoolerState.AUTO],
+      // }).onGet(async () => {
+      //   this.platform.log.debug('Get TargetHeaterCoolerState ->', this.exampleState.targetState);
+      //   return this.exampleState.targetState;
+      // }).onSet(async (value: CharacteristicValue) => {
+      //   this.platform.log.debug('Set TargetHeaterCoolerState ->', value);
+      //   this.exampleState.targetState = value as number;
+      //   this.service.updateCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState, value);
+      // });
+
+    this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState).onGet(async () => {
+      this.platform.log.debug('Get TargetHeaterCoolerState ->', this.exampleState.targetState);
+      return this.exampleState.targetState;
+    }).onSet(async (value: CharacteristicValue) => {
+      this.platform.log.debug('Set TargetHeaterCoolerState ->', value);
+      this.exampleState.targetState = value as number;
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState, value);
     });
-    
-    // this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState)
-    //   .onGet(() => {
-    //     this.platform.log.debug('Get TargetHeaterCoolerState ->', this.exampleState.targetState);
-    //     return this.exampleState.targetState;
-    //   })
-    //   .onSet(async (value: CharacteristicValue) => {
-    //     this.platform.log.debug('Set TargetHeaterCoolerState ->', value);
-    //     this.exampleState.targetState = value as number;
-    //     this.service.updateCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState, value);
-    //   })
-    //   .setProps({
-    //     maxValue: 2,
-    //   });
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .onGet(() => {
         this.platform.log.debug('Get CurrentTemperature ->', this.exampleState.currentTemperature);
         return this.exampleState.currentTemperature;
+      });
+
+    this.service.getCharacteristic(this.platform.Characteristic.CoolingThresholdTemperature)
+      .onGet(() => {
+        return this.exampleState.targetCoolingTemperature as number;
+      })
+      .onSet((value: CharacteristicValue) => {
+        this.platform.log.debug('Set TargetTemperature ->', value);
+        this.exampleState.targetCoolingTemperature = value as number;
+        this.service.updateCharacteristic(this.platform.Characteristic.CoolingThresholdTemperature,
+          value);
+      });
+    
+    this.service.getCharacteristic(this.platform.Characteristic.HeatingThresholdTemperature)
+      .onGet(() => {
+        return this.exampleState.targetHeatingTemperature as number;
+      })
+      .onSet((value: CharacteristicValue) => {
+        this.platform.log.debug('Set TargetTemperature ->', value);
+        this.exampleState.targetHeatingTemperature = value as number;
+        this.service.updateCharacteristic(this.platform.Characteristic.HeatingThresholdTemperature,
+          value);
       });
     
   }
