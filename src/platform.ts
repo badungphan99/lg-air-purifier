@@ -2,7 +2,6 @@ import type { API, Characteristic, DynamicPlatformPlugin, Logging, PlatformAcces
 
 import { Puricare360Accessory } from './platformPuriCare360Accessory.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
-import { ThingQ } from './lib/thinq.js';
 
 // This is only required when using Custom Services and Characteristics not support by HomeKit
 // import { EveHomeKitTypes } from 'homebridge-lib/EveHomeKitTypes';
@@ -25,7 +24,6 @@ export class LGAirPurifierPlatform implements DynamicPlatformPlugin {
   public readonly CustomServices: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public readonly CustomCharacteristics: any;
-  public readonly thingQ!: ThingQ;
 
   constructor(
     public readonly log: Logging,
@@ -34,16 +32,6 @@ export class LGAirPurifierPlatform implements DynamicPlatformPlugin {
   ) {
     this.Service = api.hap.Service;
     this.Characteristic = api.hap.Characteristic;
-    
-    if (!this.config) {
-      this.log.error('No config provided, please check your config.json file');
-      return;
-    }
-    if (!this.config.region || !this.config.country || !this.config.token) {
-      this.log.error('Missing required config values: region, country, token');
-      return;
-    }
-    this.thingQ = new ThingQ(this.log, this.config.region, this.config.country, this.config.token);
 
     // This is only required when using Custom Services and Characteristics not support by HomeKit
     // this.CustomServices = new EveHomeKitTypes(this.api).Services;
@@ -79,13 +67,24 @@ export class LGAirPurifierPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
-    let devices : object;
-    try {
-      devices = await this.thingQ.getDevices();
-    } catch (error) {
-      this.log.error('Error fetching devices:\n', error);
-      return;
-    }
+    // let devices : object;
+    // try {
+    //   devices = await this.thingQ.getDevices();
+    // } catch (error) {
+    //   this.log.error('Error fetching devices:\n', error);
+    //   return;
+    // }
+
+    const devices = [
+      {
+        deviceId: '1234567890',
+        deviceInfo: {
+          deviceType: 'DEVICE_AIR_PURIFIER',
+          alias: 'Living Room Purifier',
+          modelName: 'LG-Puricare-360',
+        },
+      },
+    ];
 
     for (const device of Object.values(devices)) {
       // generate a unique id for the accessory this should be generated from
