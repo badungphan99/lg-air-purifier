@@ -83,12 +83,11 @@ export class Puricare360Accessory {
         return;
       }
       this.accessory.context.device.data = await this.platform.thingQ.getDeviceState(this.accessory.context.device.deviceId);
-      this.lastUpdate = Date.now();
     } catch (error) {
       this.platform.log.error('Error fetching device state:', error);
       return;
     }
-    this.platform.log.debug('Device state fetched:', this.accessory.context.device.data);
+    this.lastUpdate = Date.now();
 
     // Update Characteristics
     if (this.accessory.context.device.data.operation.airPurifierOperationMode === 'POWER_ON') {

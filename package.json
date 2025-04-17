@@ -15,7 +15,9 @@
     "url": "https://github.com/badungphan99/lg-air-purifier/issues"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "lg",
+    "air-purifier"
   ],
   "main": "dist/index.js",
   "engines": {
